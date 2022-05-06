@@ -11,14 +11,11 @@ typedef enum {
     // Success (no error)
     WAVPACK_FILE_RESULT_SUCCESS = 0,
 
-    // Failed to open the wav file
+    // Failed to open the wavpack file
     WAVPACK_FILE_RESULT_OPEN_FAILED,
 
-    // The specified file was not a valid wav file or a file read/seek operation failed
+    // The specified file was not a valid wavpack file or a file read/seek operation failed
     WAVPACK_FILE_RESULT_FILE_ERROR,
-
-    // The properties (i.e. channel count) of the wav file are not (yet) supported
-    WAVPACK_FILE_RESULT_UNSUPPORTED,
 
     // An invalid parameter was passed
     WAVPACK_FILE_RESULT_INVALID_PARAM,

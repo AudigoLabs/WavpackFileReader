@@ -8,7 +8,6 @@ public enum WavpackFileReaderError : Error {
 
     case openFailed
     case fileError
-    case unsupported
     case invalidParam
     case unknownCError(UInt32)
 
@@ -24,8 +23,6 @@ extension wavpack_file_result_t {
             return .openFailed
         case WAVPACK_FILE_RESULT_FILE_ERROR:
             return .fileError
-        case WAVPACK_FILE_RESULT_UNSUPPORTED:
-            return .unsupported
         case WAVPACK_FILE_RESULT_INVALID_PARAM:
             return .invalidParam
         default:
