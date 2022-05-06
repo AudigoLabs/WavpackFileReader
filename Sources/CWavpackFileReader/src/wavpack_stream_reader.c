@@ -1,36 +1,8 @@
 
-#include "wavpack_file.h"
-//#include "wav_file_types.h"
-//
-//#include <Accelerate/Accelerate.h>
-//#include <errno.h>
-//#include <inttypes.h>
-//#include <stdbool.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//
-//#define MIN_NUM_CHANNELS        1
-//#define MAX_NUM_CHANNELS        2
-//#define MAX_BYTES_PER_SAMPLE    4
-//#define READ_BUFFER_SIZE_FRAMES 1024
-//
-//#define _STR1(S) #S
-//#define _STR2(S) _STR1(S)
-//#define _LOG_LOCATION __FILE__ ":" _STR2(__LINE__)
-//#define LOG_ERROR(FMT, ...) printf("ERROR [" _LOG_LOCATION "]" FMT "\n", ##__VA_ARGS__)
-//
-
-
-#include "lib/wavpack.h"
+#include "wavpack_stream_reader.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#define _STR1(S) #S
-#define _STR2(S) _STR1(S)
-#define _LOG_LOCATION __FILE__ ":" _STR2(__LINE__)
-#define LOG_ERROR(FMT, ...) printf("ERROR [" _LOG_LOCATION "]" FMT "\n", ##__VA_ARGS__)
 
 static int32_t wavpack_read_bytes(void* id, void *data, int32_t bcount) {
     FILE* file = (FILE*)id;
@@ -41,21 +13,25 @@ static int64_t wavpack_get_pos(void* id) {
     FILE* file = (FILE*)id;
     return ftell(file);
 }
+
 static int wavpack_set_pos_abs(void* id, int64_t pos) {
     FILE* file = (FILE*)id;
     fseek(file, pos, SEEK_SET);
     return 0;
 }
+
 static int wavpack_set_pos_rel(void* id, int64_t delta, int mode) {
     FILE* file = (FILE*)id;
     fseek(file, delta, mode);
     return 0;
 }
+
 static int wavpack_push_back_byte(void* id, int c) {
     FILE* file = (FILE*)id;
     fseek(file, -1, SEEK_CUR);
     return c;
 }
+
 static int64_t wavpack_get_length(void* id) {
     FILE* file = (FILE*)id;
     const long prevOffset = ftell(file);
@@ -64,9 +40,11 @@ static int64_t wavpack_get_length(void* id) {
     fseek(file, prevOffset, SEEK_SET);
     return length;
 }
+
 static int wavpack_can_seek(void* id) {
     return 1;
 }
+
 static int wavpack_close(void* id) {
     FILE* file = (FILE*)id;
     fclose(file);
