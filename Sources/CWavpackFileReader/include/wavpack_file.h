@@ -24,7 +24,7 @@ typedef enum {
 struct wavpack_file;
 typedef struct wavpack_file* _Null_unspecified wavpack_file_handle_t;
 
-wavpack_file_result_t wavpack_file_open(const char* _Nonnull wv_path, const char* _Nonnull wvc_path, wavpack_file_handle_t* _Nonnull wavpack_file_out);
+wavpack_file_result_t wavpack_file_open(const char* _Nonnull wv_path, const char* _Nullable wvc_path, wavpack_file_handle_t* _Nonnull wavpack_file_out);
 
 uint16_t wavpack_file_get_num_channels(wavpack_file_handle_t wavpack_file);
 

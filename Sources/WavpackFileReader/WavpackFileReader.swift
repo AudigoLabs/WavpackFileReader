@@ -8,9 +8,16 @@ public class WavpackFileReader {
 
     private let handle: wavpack_file_handle_t
 
-    public init(wvURL: URL, wvcURL: URL) throws {
-        guard let wvPath = wvURL.path.cString(using: .utf8), let wvcPath = wvcURL.path.cString(using: .utf8) else {
-            throw WavpackFileReaderError.invalidPath("Failed to convert path to C string")
+    public init(wvURL: URL, wvcURL: URL?) throws {
+        guard let wvPath = wvURL.path.cString(using: .utf8) else {
+            throw WavpackFileReaderError.invalidPath("Failed to convert .wv file path to C string")
+        }
+        var wvcPath: [CChar]? = nil
+        if let wvcURL = wvcURL {
+            wvcPath = wvcURL.path.cString(using: .utf8)
+            guard wvcPath != nil else {
+                throw WavpackFileReaderError.invalidPath("Failed to convert .wvc file path to C string")
+            }
         }
         var handle: wavpack_file_handle_t?
         let result = wavpack_file_open(wvPath, wvcPath, &handle)

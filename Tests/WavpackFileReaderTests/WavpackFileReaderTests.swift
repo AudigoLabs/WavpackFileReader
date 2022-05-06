@@ -13,7 +13,29 @@ final class WavFileReaderTests: XCTestCase {
         XCTAssertEqual(reader.duration, 45.28)
     }
 
-    func testRead() throws {
+    func testReadWV() throws {
+        // Open the file using our reader
+        let wvURL = Bundle.module.url(forResource: "drum", withExtension: "wv", subdirectory: "TestResources")!
+        let reader = try WavpackFileReader(wvURL: wvURL, wvcURL: nil)
+
+        // Compare our reader with AVAudioFile
+        let wavURL = Bundle.module.url(forResource: "drum", withExtension: "wav", subdirectory: "TestResources")!
+        let audioFile = try AVAudioFile(forReading: wavURL)
+
+        // Compare the number of frames
+        let expectedNumFrames = AVAudioFrameCount(audioFile.length)
+        XCTAssertEqual(Double(expectedNumFrames) / audioFile.fileFormat.sampleRate, 45.28)
+
+        // Read the expected file
+        let expectedBuffer = AVAudioPCMBuffer(pcmFormat: reader.format, frameCapacity: expectedNumFrames)!
+        try audioFile.read(into: expectedBuffer)
+
+        // Read the entire file using our reader
+        let buffer = reader.readFrames(frameCapacity: expectedNumFrames)
+        XCTAssertEqual(buffer.frameLength, expectedNumFrames)
+    }
+
+    func testReadWVC() throws {
         // Open the file using our reader
         let wvURL = Bundle.module.url(forResource: "drum", withExtension: "wv", subdirectory: "TestResources")!
         let wvcURL = Bundle.module.url(forResource: "drum", withExtension: "wvc", subdirectory: "TestResources")!

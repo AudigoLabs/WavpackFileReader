@@ -24,16 +24,21 @@ wavpack_file_result_t wavpack_file_open(const char* wv_path, const char* wvc_pat
     if (!wv_file) {
         return WAVPACK_FILE_RESULT_OPEN_FAILED;
     }
-    FILE* wvc_file = fopen(wvc_path, "r");
-    if (!wvc_file) {
-        fclose(wv_file);
-        return WAVPACK_FILE_RESULT_OPEN_FAILED;
+    FILE* wvc_file = NULL;
+    if (wvc_path) {
+        wvc_file = fopen(wvc_path, "r");
+        if (!wvc_file) {
+            fclose(wv_file);
+            return WAVPACK_FILE_RESULT_OPEN_FAILED;
+        }
     }
     char error_buffer[81];
-    WavpackContext* context = WavpackOpenFileInputEx64(wavpack_stream_reader_get(), wv_file, wvc_file, error_buffer, OPEN_WVC, 0);
+    WavpackContext* context = WavpackOpenFileInputEx64(wavpack_stream_reader_get(), wv_file, wvc_file, error_buffer, wvc_path ? OPEN_WVC : 0, 0);
     if (!context) {
         fclose(wv_file);
-        fclose(wvc_file);
+        if (wvc_file) {
+            fclose(wvc_file);
+        }
         LOG_ERROR("Failed to open wavpack file: %s", error_buffer);
         return WAVPACK_FILE_RESULT_OPEN_FAILED;
     }
