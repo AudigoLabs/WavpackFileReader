@@ -32,6 +32,8 @@ uint32_t wavpack_file_get_sample_rate(wavpack_file_handle_t wavpack_file);
 
 double wavpack_file_get_duration(wavpack_file_handle_t wavpack_file);
 
+uint16_t wavpack_file_get_bits_per_sample(wavpack_file_handle_t wavpack_file);
+
 wavpack_file_result_t wavpack_file_set_seek(wavpack_file_handle_t wavpack_file, double position);
 
 wavpack_file_result_t wavpack_file_set_offset(wavpack_file_handle_t wavpack_file, uint32_t offset);

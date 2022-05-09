@@ -11,6 +11,7 @@ final class WavFileReaderTests: XCTestCase {
         XCTAssertEqual(reader.format.channelCount, 2)
         XCTAssertEqual(reader.format.sampleRate, 48000)
         XCTAssertEqual(reader.duration, 45.28)
+        XCTAssertEqual(reader.fileBitsPerSample, 16)
     }
 
     func testReadWV() throws {

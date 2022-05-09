@@ -44,6 +44,10 @@ public class WavpackFileReader {
         wavpack_file_get_duration(handle)
     }
 
+    public var fileBitsPerSample: UInt16 {
+        wavpack_file_get_bits_per_sample(handle)
+    }
+
     public func readFrames(frameCapacity: UInt32) -> AVAudioPCMBuffer {
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCapacity),
               let floatChannelData = buffer.floatChannelData else {

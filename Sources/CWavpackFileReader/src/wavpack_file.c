@@ -66,6 +66,10 @@ double wavpack_file_get_duration(wavpack_file_handle_t wavpack_file) {
     return (double)WavpackGetNumSamples(wavpack_file->context) / wavpack_file_get_sample_rate(wavpack_file);
 }
 
+uint16_t wavpack_file_get_bits_per_sample(wavpack_file_handle_t wavpack_file) {
+    return (uint16_t)WavpackGetBitsPerSample(wavpack_file->context);
+}
+
 wavpack_file_result_t wavpack_file_set_seek(wavpack_file_handle_t wavpack_file, double position) {
     if (position > wavpack_file_get_duration(wavpack_file)) {
         return WAVPACK_FILE_RESULT_INVALID_PARAM;
