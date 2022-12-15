@@ -114,6 +114,67 @@ uint32_t wavpack_file_read(wavpack_file_handle_t wavpack_file, float* const* dat
 
 void wavpack_file_close(wavpack_file_handle_t wavpack_file) {
     WavpackCloseFile(wavpack_file->context);
-    free(wavpack_file->unpack_buffer);
+    if (wavpack_file->unpack_buffer) {
+        free(wavpack_file->unpack_buffer);
+    }
     free(wavpack_file);
+}
+
+static int wavpack_write_handler(void* id, void* data, int32_t length) {
+    return (int)fwrite(data, 1, length, (FILE*)id);
+}
+
+wavpack_file_result_t wavpack_file_open_for_writing(const char* wv_path, const char* wvc_path, uint8_t num_channels, uint8_t bits_per_sample, uint32_t sample_rate, wavpack_file_handle_t* wavpack_file_out) {
+    // Open the files
+    FILE* wv_file = fopen(wv_path, "w");
+    if (!wv_file) {
+        return WAVPACK_FILE_RESULT_OPEN_FAILED;
+    }
+    FILE* wvc_file = fopen(wvc_path, "w");
+    if (!wvc_file) {
+        return WAVPACK_FILE_RESULT_OPEN_FAILED;
+    }
+    WavpackContext* context = WavpackOpenFileOutput(wavpack_write_handler, wv_file, wvc_file);
+    if (!context) {
+        fclose(wv_file);
+        fclose(wvc_file);
+        LOG_ERROR("Failed to open wavpack file");
+        return WAVPACK_FILE_RESULT_OPEN_FAILED;
+    }
+    WavpackConfig config_wavpack = {
+        .bits_per_sample = bits_per_sample,
+        .bytes_per_sample = bits_per_sample / 8,
+        .num_channels = num_channels,
+        .sample_rate = sample_rate,
+        .flags = CONFIG_FAST_FLAG | CONFIG_HYBRID_FLAG | CONFIG_CREATE_WVC | CONFIG_OPTIMIZE_WVC,
+        .bitrate = 512,
+        .shaping_weight = 0,
+    };
+    if (!WavpackSetConfiguration(context, &config_wavpack, UINT32_MAX)) {
+        fclose(wv_file);
+        fclose(wvc_file);
+        WavpackCloseFile(context);
+        LOG_ERROR("Failed to set configuration");
+        return WAVPACK_FILE_RESULT_OPEN_FAILED;
+    }
+    if (!WavpackPackInit(context)) {
+        fclose(wv_file);
+        fclose(wvc_file);
+        WavpackCloseFile(context);
+        LOG_ERROR("Failed to initialize");
+        return WAVPACK_FILE_RESULT_OPEN_FAILED;
+    }
+
+    // Allocate a file handle
+    wavpack_file_handle_t wavpack_file = malloc(sizeof(struct wavpack_file));
+    memset(wavpack_file, 0, sizeof(struct wavpack_file));
+    wavpack_file->context = context;
+
+    // Return the handle
+    *wavpack_file_out = wavpack_file;
+    return WAVPACK_FILE_RESULT_SUCCESS;
+}
+
+wavpack_file_result_t wavpack_file_write(wavpack_file_handle_t wavpack_file, int32_t* samples, uint32_t num_frames) {
+    return WavpackPackSamples(wavpack_file->context, samples, num_frames) ? WAVPACK_FILE_RESULT_SUCCESS : WAVPACK_FILE_RESULT_FILE_ERROR;
 }

@@ -85,4 +85,23 @@ final class WavFileReaderTests: XCTestCase {
         XCTAssertEqual(buffer.frameLength, 100)
     }
 
+    func testWrite() throws {
+        let wvPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("drum.wv")
+        let wvcPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("drum.wvc")
+        let writer = try WavpackFileWriter(wvURL: wvPath, wvcURL: wvcPath)
+
+        // Open the .wav file and read it into memory
+        let wavURL = Bundle.module.url(forResource: "drum", withExtension: "wav", subdirectory: "TestResources")!
+        let audioFile = try AVAudioFile(forReading: wavURL)
+        let expectedNumFrames = AVAudioFrameCount(audioFile.length)
+        let expectedBuffer = AVAudioPCMBuffer(pcmFormat: writer.format, frameCapacity: expectedNumFrames)!
+        try audioFile.read(into: expectedBuffer)
+
+        for i in 0..<expectedBuffer.frameLength {
+            for j in 0..<Int(writer.format.channelCount) {
+                // TODO: Somehow call wavpack_file_write with the right data
+            }
+        }
+    }
+
 }

@@ -42,6 +42,10 @@ uint32_t wavpack_file_read(wavpack_file_handle_t wavpack_file, float* const _Non
 
 void wavpack_file_close(wavpack_file_handle_t wavpack_file);
 
+wavpack_file_result_t wavpack_file_open_for_writing(const char* _Nonnull wv_path, const char* _Nonnull wvc_path, uint8_t num_channels, uint8_t bits_per_sample, uint32_t sample_rate, wavpack_file_handle_t* _Nonnull wavpack_file_out);
+
+wavpack_file_result_t wavpack_file_write(wavpack_file_handle_t wavpack_file, int32_t* _Nonnull samples, uint32_t num_frames);
+
 #ifdef __cplusplus
 };
 #endif
