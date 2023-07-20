@@ -33,7 +33,10 @@ wavpack_file_result_t wavpack_file_open(const char* wv_path, const char* wvc_pat
         }
     }
     char error_buffer[81];
-    WavpackContext* context = WavpackOpenFileInputEx64(wavpack_stream_reader_get(), wv_file, wvc_file, error_buffer, wvc_path ? OPEN_WVC : 0, 0);
+    const int flags =
+        (wvc_path ? OPEN_WVC : 0) |
+        (4 << OPEN_THREADS_SHFT);
+    WavpackContext* context = WavpackOpenFileInputEx64(wavpack_stream_reader_get(), wv_file, wvc_file, error_buffer, flags, 0);
     if (!context) {
         fclose(wv_file);
         if (wvc_file) {
