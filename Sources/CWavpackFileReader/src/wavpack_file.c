@@ -35,9 +35,7 @@ wavpack_file_result_t wavpack_file_open(const char* wv_path, const char* wvc_pat
         }
     }
     char error_buffer[81];
-    const int flags =
-        (wvc_path ? OPEN_WVC : 0) |
-        (4 << OPEN_THREADS_SHFT);
+    const int flags = wvc_path ? OPEN_WVC : 0;
     WavpackContext* context = WavpackOpenFileInputEx64(wavpack_stream_reader_get(), wv_file, wvc_file, error_buffer, flags, 0);
     if (!context) {
         fclose(wv_file);
@@ -71,7 +69,7 @@ wavpack_file_result_t wavpack_file_open_raw(const void* wv_data, int32_t wv_size
     }
 
     char error_buffer[81];
-    const int flags = (4 << OPEN_THREADS_SHFT);
+    const int flags = 0;
     WavpackContext* context = WavpackOpenRawDecoder((void*)wv_data, wv_size, (void*)wvc_data, wvc_size, 0x0, error_buffer, flags, 0);
     if (!context) {
         LOG_ERROR("Failed to open raw wavpack decoder: %s", error_buffer);

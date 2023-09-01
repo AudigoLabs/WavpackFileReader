@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [],
     targets: [
         .target(name: "WavpackFileReader", dependencies: ["CWavpackFileReader"]),
-        .target(name: "CWavpackFileReader", cxxSettings: [.headerSearchPath("."), .define("ENABLE_THREADS", to: "1")]),
+        .target(name: "CWavpackFileReader", cxxSettings: [.headerSearchPath(".")]),
         .testTarget(name: "WavpackFileReaderTests", dependencies: ["WavpackFileReader"], resources: [.copy("TestResources")]),
     ],
     cxxLanguageStandard: .cxx14
