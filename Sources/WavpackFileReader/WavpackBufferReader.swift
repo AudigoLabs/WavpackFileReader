@@ -23,7 +23,7 @@ public class WavpackBufferReader {
         guard result.isSuccess else {
             throw result.toWavpackFileReaderError()
         }
-        guard let handle = handle else {
+        guard let handle else {
             fatalError("Did not get handle back from successful open")
         }
         let numChannels = AVAudioChannelCount(wavpack_file_get_num_channels(handle))
@@ -47,12 +47,15 @@ public class WavpackBufferReader {
         wavpack_file_get_duration(handle)
     }
 
-    public func readFrames() -> AVAudioPCMBuffer {
+    public func readFrames() throws -> AVAudioPCMBuffer {
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(wavpack_file_get_num_samples(handle))),
               let floatChannelData = buffer.floatChannelData else {
             fatalError("Failed to create buffer")
         }
         buffer.frameLength = wavpack_file_read(handle, floatChannelData, buffer.frameCapacity)
+        guard buffer.frameLength == buffer.frameCapacity else {
+            throw WavpackFileReaderError.fileError
+        }
         return buffer
     }
 

@@ -139,7 +139,7 @@ uint32_t wavpack_file_read(wavpack_file_handle_t wavpack_file, float* const* dat
 
     if (wavpack_file->raw_frames) {
         if (max_num_frames != wavpack_file_get_num_samples(wavpack_file)) {
-            return WAVPACK_FILE_RESULT_INVALID_PARAM;
+            return 0;
         }
         // Convert the samples to floats and write them into the passed buffer
         for (uint16_t channel = 0; channel < num_channels; channel++) {

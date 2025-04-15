@@ -24,7 +24,7 @@ public class WavpackFileReader {
         guard result.isSuccess else {
             throw result.toWavpackFileReaderError()
         }
-        guard let handle = handle else {
+        guard let handle else {
             fatalError("Did not get handle back from successful open")
         }
         let numChannels = AVAudioChannelCount(wavpack_file_get_num_channels(handle))
