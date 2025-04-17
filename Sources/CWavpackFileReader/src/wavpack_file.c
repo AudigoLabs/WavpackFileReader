@@ -1,7 +1,9 @@
 #include "wavpack_file.h"
 #include "wavpack_stream_reader.h"
 
+#ifdef USE_ACCELERATE
 #include <Accelerate/Accelerate.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,10 +145,16 @@ uint32_t wavpack_file_read(wavpack_file_handle_t wavpack_file, float* const* dat
         }
         // Convert the samples to floats and write them into the passed buffer
         for (uint16_t channel = 0; channel < num_channels; channel++) {
-            // Convert the fixed-point data into a float
-            vDSP_vflt32(&wavpack_file->unpack_buffer[channel], num_channels, data[channel], 1, max_num_frames);
-            // Scale the float data to be within the range [-1,1]
-            vDSP_vsdiv(data[channel], 1, &MAX_VALUE, data[channel], 1, max_num_frames);
+          #ifdef USE_ACCELERATE
+          // Convert the fixed-point data into a float
+          vDSP_vflt32(&wavpack_file->unpack_buffer[channel], num_channels, &data[channel][total_frames_unpacked], 1, num_frames_unpacked);
+          // Scale the float data to be within the range [-1,1]
+          vDSP_vsdiv(&data[channel][total_frames_unpacked], 1, &MAX_VALUE, &data[channel][total_frames_unpacked], 1, num_frames_unpacked);
+          #else
+          // TODO: Implement this
+          fprintf(stderr, "not yet implemented");
+          return 0;
+          #endif
         }
         return max_num_frames;
     }
@@ -163,6 +171,7 @@ uint32_t wavpack_file_read(wavpack_file_handle_t wavpack_file, float* const* dat
             break;
         }
 
+        #ifdef USE_ACCELERATE
         // Convert the samples to floats and write them into the passed buffer
         for (uint16_t channel = 0; channel < num_channels; channel++) {
             // Convert the fixed-point data into a float
@@ -170,7 +179,37 @@ uint32_t wavpack_file_read(wavpack_file_handle_t wavpack_file, float* const* dat
             // Scale the float data to be within the range [-1,1]
             vDSP_vsdiv(&data[channel][total_frames_unpacked], 1, &MAX_VALUE, &data[channel][total_frames_unpacked], 1, num_frames_unpacked);
         }
-
+        #else
+        // TODO: Verify this
+        // Convert the samples to floats and write them into the passed buffer
+        printf("scanning through the frames\n");
+        printf("num_frames_unpacked %i\n", num_frames_unpacked);
+        int32_t max_value = 0;
+        for (uint16_t channel = 0; channel < num_channels; channel++) {
+          int32_t *unpack_buffer = &wavpack_file->unpack_buffer[channel];
+          // Find the abs max amplitude value
+          for (int32_t channel_frame = 0; channel_frame < num_frames_unpacked; channel_frame++) {
+            int32_t sample = abs( unpack_buffer[channel_frame] );
+            printf("%i ", sample);
+            if (sample > max_value) {
+              max_value = sample;
+            }
+          }
+        }
+        printf("\n");
+        printf("max value: %i %f\n", max_value, (float)max_value);
+        for (uint16_t channel = 0; channel < num_channels; channel++) {
+          int32_t *unpack_buffer = &wavpack_file->unpack_buffer[channel];
+          // Convert and scale the float data to be within the range [-1,1] relative to the abs max amplitude
+          for (int32_t channel_frame = 0; channel_frame < num_frames_unpacked; channel_frame++) {
+            int32_t sample = unpack_buffer[channel_frame];
+            data[channel][channel_frame] = (float)( (double)sample / (double)max_value );
+            printf("%f ", data[channel][channel_frame]);
+          }
+          printf("\n");
+        }
+        #endif
+        
         total_frames_unpacked += num_frames_unpacked;
     }
     return total_frames_unpacked;
