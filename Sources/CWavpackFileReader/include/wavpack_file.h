@@ -7,6 +7,12 @@
 extern "C" {
 #endif
 
+typedef struct {
+    uint16_t num_channels;
+    uint16_t bits_per_sample;
+    uint32_t sample_rate;
+} wavpack_write_config_t;
+
 typedef enum {
     // Success (no error)
     WAVPACK_FILE_RESULT_SUCCESS = 0,
@@ -24,9 +30,11 @@ typedef enum {
 struct wavpack_file;
 typedef struct wavpack_file* _Null_unspecified wavpack_file_handle_t;
 
-wavpack_file_result_t wavpack_file_open(const char* _Nonnull wv_path, const char* _Nullable wvc_path, wavpack_file_handle_t* _Nonnull wavpack_file_out);
+wavpack_file_result_t wavpack_file_open_for_writing(const wavpack_write_config_t* _Nonnull config, const char* _Nonnull wv_path, const char* _Nullable wvc_path, wavpack_file_handle_t* _Nonnull wavpack_file_out);
 
-wavpack_file_result_t wavpack_file_open_raw(const void* _Nonnull wv_data, int32_t wv_size, const void* _Nullable wvc_data, int32_t wvc_size, wavpack_file_handle_t* _Nonnull wavpack_file_out);
+wavpack_file_result_t wavpack_file_open_for_reading(const char* _Nonnull wv_path, const char* _Nullable wvc_path, wavpack_file_handle_t* _Nonnull wavpack_file_out);
+
+wavpack_file_result_t wavpack_file_open_for_reading_raw(const void* _Nonnull wv_data, int32_t wv_size, const void* _Nullable wvc_data, int32_t wvc_size, wavpack_file_handle_t* _Nonnull wavpack_file_out);
 
 uint16_t wavpack_file_get_num_channels(wavpack_file_handle_t wavpack_file);
 
@@ -45,6 +53,8 @@ wavpack_file_result_t wavpack_file_set_seek(wavpack_file_handle_t wavpack_file, 
 wavpack_file_result_t wavpack_file_set_offset(wavpack_file_handle_t wavpack_file, uint32_t offset);
 
 uint32_t wavpack_file_read(wavpack_file_handle_t wavpack_file, float* const _Nonnull* _Nonnull data, uint32_t max_num_frames);
+
+wavpack_file_result_t wavpack_file_write(wavpack_file_handle_t wavpack_file, float* const _Nonnull* _Nonnull data, uint32_t num_frames);
 
 void wavpack_file_close(wavpack_file_handle_t wavpack_file);
 

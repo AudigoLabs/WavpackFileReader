@@ -85,4 +85,43 @@ final class WavFileReaderTests: XCTestCase {
         XCTAssertEqual(buffer.frameLength, 100)
     }
 
+    func testWriteRead() throws {
+        // Open and read the uncompressed file
+        let wavURL = Bundle.module.url(forResource: "drum", withExtension: "wav", subdirectory: "TestResources")!
+        let wavFile = try AVAudioFile(forReading: wavURL)
+        let wavBuffer = AVAudioPCMBuffer(pcmFormat: wavFile.processingFormat, frameCapacity: UInt32(wavFile.length))!
+        try wavFile.read(into: wavBuffer)
+
+        // Write the file
+        let tempDirURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+        let wvURL = tempDirURL.appendingPathComponent("test.wv")
+        let wvcURL = tempDirURL.appendingPathComponent("test.wvc")
+
+        try {
+            let writer = try WavpackFileWriter(wvURL: wvURL, wvcURL: wvcURL, bitsPerSample: 24, numChannels: UInt16(wavBuffer.format.channelCount), sampleRate: UInt32(wavBuffer.format.sampleRate))
+            try writer.writeFrames(wavBuffer)
+        }()
+
+        defer {
+            try? FileManager.default.removeItem(at: wvURL)
+            try? FileManager.default.removeItem(at: wvcURL)
+        }
+
+        // Open the newly-written file using our reader
+        let reader = try WavpackFileReader(wvURL: wvURL, wvcURL: wvcURL)
+
+        // Compare the number of frames
+        let expectedNumFrames = AVAudioFrameCount(wavBuffer.frameLength)
+        XCTAssertEqual(Double(expectedNumFrames) / wavFile.fileFormat.sampleRate, 45.28)
+
+        // Read the entire file using our reader
+        let buffer = reader.readFrames(frameCapacity: expectedNumFrames)
+        XCTAssertEqual(buffer.frameLength, expectedNumFrames)
+
+        // Compare each channel
+        for i in 0..<Int(reader.format.channelCount) {
+            XCTAssertEqual(memcmp(buffer.floatChannelData![i], wavBuffer.floatChannelData![i], Int(expectedNumFrames) * MemoryLayout<Float>.stride), 0)
+        }
+    }
+
 }

@@ -10,18 +10,15 @@ public class WavpackBufferReader {
 
     public init(wvData: Data, wvcData: Data?) throws {
         var handle: wavpack_file_handle_t?
-        let result: wavpack_file_result_t = wvData.withUnsafeBytes { wvPtr in
+        try wvData.withUnsafeBytes { wvPtr in
             if let wvcData {
-                return wvcData.withUnsafeBytes { wvcPtr in
-                    return wavpack_file_open_raw(wvPtr.baseAddress!, Int32(wvData.count), wvcPtr.baseAddress!, Int32(wvcData.count), &handle)
+                try wvcData.withUnsafeBytes { wvcPtr in
+                    try wavpack_file_open_for_reading_raw(wvPtr.baseAddress!, Int32(wvData.count), wvcPtr.baseAddress!, Int32(wvcData.count), &handle).checkSuccess()
                 }
             }
             else {
-                return wavpack_file_open_raw(wvPtr.baseAddress!, Int32(wvData.count), nil, 0, &handle)
+                try wavpack_file_open_for_reading_raw(wvPtr.baseAddress!, Int32(wvData.count), nil, 0, &handle).checkSuccess()
             }
-        }
-        guard result.isSuccess else {
-            throw result.toWavpackFileReaderError()
         }
         guard let handle else {
             fatalError("Did not get handle back from successful open")

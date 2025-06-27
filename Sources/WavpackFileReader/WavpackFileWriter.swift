@@ -2,13 +2,14 @@ import CWavpackFileReader
 import Foundation
 import AVFoundation
 
-public class WavpackFileReader {
+public class WavpackFileWriter {
 
     public let format: AVAudioFormat
 
     private let handle: wavpack_file_handle_t
+    private var isOpen = false
 
-    public init(wvURL: URL, wvcURL: URL?) throws {
+    public init(wvURL: URL, wvcURL: URL?, bitsPerSample: UInt16, numChannels: UInt16, sampleRate: UInt32) throws {
         guard let wvPath = wvURL.cStringPath else {
             throw WavpackFileReaderError.invalidPath("Failed to convert .wv file path to C string")
         }
@@ -21,8 +22,10 @@ public class WavpackFileReader {
         } else {
             wvcPath = nil
         }
+        var config = wavpack_write_config_t(num_channels: numChannels, bits_per_sample: bitsPerSample, sample_rate: sampleRate)
         var handle: wavpack_file_handle_t?
-        try wavpack_file_open_for_reading(wvPath, wvcPath, &handle).checkSuccess()
+        let result = wavpack_file_open_for_writing(&config, wvPath, wvcPath, &handle)
+        try result.checkSuccess()
         guard let handle else {
             fatalError("Did not get handle back from successful open")
         }
@@ -33,35 +36,17 @@ public class WavpackFileReader {
         }
         self.handle = handle
         self.format = format
+        isOpen = true
     }
 
     deinit {
         wavpack_file_close(handle)
     }
 
-    public var duration: TimeInterval {
-        wavpack_file_get_duration(handle)
-    }
-
-    public var fileBitsPerSample: UInt16 {
-        wavpack_file_get_bits_per_sample(handle)
-    }
-
-    public func readFrames(frameCapacity: UInt32) -> AVAudioPCMBuffer {
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCapacity),
-              let floatChannelData = buffer.floatChannelData else {
-            fatalError("Failed to create buffer")
+    public func writeFrames(_ buffer: AVAudioPCMBuffer) throws {
+        guard let floatChannelData = buffer.floatChannelData else {
+            throw WavpackFileReaderError.invalidFormat
         }
-        buffer.frameLength = wavpack_file_read(handle, floatChannelData, buffer.frameCapacity)
-        return buffer
+        try wavpack_file_write(handle, floatChannelData, buffer.frameLength).checkSuccess()
     }
-
-    public func seek(position: TimeInterval) throws {
-        try wavpack_file_set_seek(handle, position).checkSuccess()
-    }
-
-    public func setOffset(_ offset: UInt32) throws {
-        try wavpack_file_set_offset(handle, offset).checkSuccess()
-    }
-
 }
